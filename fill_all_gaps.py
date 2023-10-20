@@ -21,6 +21,15 @@ def get_small_data(start, stop):
         save.write("\n")
         if counter == stop:
             break
+    file.close()
+    save.close()
+
+    output = open("testOutput.csv",'r', encoding='utf-8-sig')
+    train_data = pd.read_csv(output, names=["Product", "Reporter", "Partner", "Year", "Flow", "Unit", "Volume"],on_bad_lines='skip')
+    output.close()
+    os.remove("/home/radek/fill_all_gaps/testOutput.csv")
+
+    return train_data
 
 
 def create_model():
@@ -33,37 +42,35 @@ def create_model():
     fill_model.compile(loss='mean_squared_error', optimizer='adam')
     return fill_model
 
-
-def main():
-    get_small_data(0, 10000)
-    output = open("testOutput.csv",'r', encoding='utf-8-sig')
-    train_data = pd.read_csv(output, names=["Product", "Reporter", "Partner", "Year", "Flow", "Unit", "Volume"],on_bad_lines='skip')
-
-    fill_features = train_data.copy()
+def prepare_data(start, stop):
+    fill_features =get_small_data(start, stop)
     fill_labels = fill_features.pop("Volume")
-
+ 
     fill_features = fill_features.values
     fill_labels = fill_labels.values
 
-    fill_features = fill_features.astype(float)
-    fill_labels = fill_labels.astype(float)
+    # fill_features = fill_features.astype(float)
+    # fill_labels = fill_labels.astype(float)
+    print(fill_features)
+    print(fill_labels)
+    pair = (fill_features, fill_labels)
+    
+    return pair
+
+def main():
 
     fill_model = create_model()
-    fill_model.summary()
 
-    checkpoint_path = "training_1/cp.ckpt"
-    checkpoint_dir = os.path.dirname(checkpoint_path)
+    dataPair = prepare_data(0, 10000)
+    #dataTest = prepare_data(0, 10000)
+    #print(dataTest[0])
 
-    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
-    save_weights_only=True,
-    verbose=1)
+    fill_model.fit(dataPair[0],dataPair[1], epochs=10)
 
-    fill_model.load_weights(checkpoint_path)
-
-    #fill_model.fit(fill_features, fill_labels, epochs=10, callbacks=[cp_callback])
+    #print(fill_model.evaluate(dataTest[0], dataTest[1]))
 
     # new_data = np.array([["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]])
     # predictions = fill_model.predict(new_data)
-    os.remove("/home/radek/fill_all_gaps/testOutput.csv")
+    fill_model.summary()
 
 main()
