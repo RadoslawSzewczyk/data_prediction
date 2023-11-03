@@ -5,7 +5,7 @@ import os
 
 def get_small_data(start, stop):
     #10m records
-    file = open("/home/radek/fill_all_gaps/Indirect_Trade_2016.cma", 'r', encoding='utf-8-sig')
+    file = open("Indirect_Trade_2016.cma", 'r', encoding='utf-8-sig')
     save = open("testOutput.csv", 'a')
     counter = 0
     for i in file:
@@ -29,7 +29,7 @@ def get_small_data(start, stop):
     output = open("testOutput.csv",'r', encoding='utf-8-sig')
     train_data = pd.read_csv(output, names=["Product", "Reporter", "Partner", "Year", "Flow", "Unit", "Volume"],on_bad_lines='skip')
     output.close()
-    os.remove("/home/radek/fill_all_gaps/testOutput.csv")
+    os.remove("testOutput.csv")
 
     return train_data
 
@@ -51,10 +51,8 @@ def prepare_data(start, stop):
     fill_features = fill_features.values
     fill_labels = fill_labels.values
 
-    # fill_features = fill_features.astype(float)
-    # fill_labels = fill_labels.astype(float)
-    # print(fill_features)
-    # print(fill_labels)
+    print(fill_features)
+    print(fill_labels)
     pair = (fill_features, fill_labels)
     
     return pair
@@ -72,17 +70,15 @@ def feed(fill_model):
 
 
 def main():
-
+    checkpoint_path = open("trainingSave.ckpt", 'a')
     fill_model = create_model()
 
-    feed(fill_model)
-    #dataTest = prepare_data(0, 10000)
-    #print(dataPair[0])
+    dataPair = prepare_data(0, 100000)
 
-    #print(fill_model.evaluate(dataTest[0], dataTest[1]))
+    fill_model.fit(dataPair[0],dataPair[1], epochs=10, batch_size=32)
 
-    new_data = np.array([["Product", "Reporter", "Partner", "Year", "Flow", "Unit", "Volume"]])
-    predictions = fill_model.predict(new_data)
+
+    cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
     fill_model.summary()
 
 main()
