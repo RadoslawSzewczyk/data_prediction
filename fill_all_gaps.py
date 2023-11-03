@@ -10,6 +10,8 @@ def get_small_data(start, stop):
     counter = 0
     for i in file:
         counter+=1
+        if(counter == 10000000):
+            return train_data.clear()
         if counter < start:
             continue
         line = i.strip().replace("\"", "")
@@ -51,26 +53,36 @@ def prepare_data(start, stop):
 
     # fill_features = fill_features.astype(float)
     # fill_labels = fill_labels.astype(float)
-    print(fill_features)
-    print(fill_labels)
+    # print(fill_features)
+    # print(fill_labels)
     pair = (fill_features, fill_labels)
     
     return pair
+
+def feed(fill_model):
+    x = 0
+    y = 100000
+    while():
+        if not prepare_data(x, y):
+            break
+        dataPair = prepare_data(x, y)
+        fill_model.fit(dataPair[0],dataPair[1], epochs=10)
+        x += 100000
+        y += 100000
+
 
 def main():
 
     fill_model = create_model()
 
-    dataPair = prepare_data(0, 10000)
+    feed(fill_model)
     #dataTest = prepare_data(0, 10000)
-    #print(dataTest[0])
-
-    fill_model.fit(dataPair[0],dataPair[1], epochs=10)
+    #print(dataPair[0])
 
     #print(fill_model.evaluate(dataTest[0], dataTest[1]))
 
-    # new_data = np.array([["feature1", "feature2", "feature3", "feature4", "feature5", "feature6"]])
-    # predictions = fill_model.predict(new_data)
+    new_data = np.array([["Product", "Reporter", "Partner", "Year", "Flow", "Unit", "Volume"]])
+    predictions = fill_model.predict(new_data)
     fill_model.summary()
 
 main()
