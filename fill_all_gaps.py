@@ -71,6 +71,7 @@ def feed(fill_model):
 
 def main():
     checkpoint_path = open("trainingSave.ckpt", 'a')
+
     fill_model = create_model()
 
     dataPair = prepare_data(0, 100000)
