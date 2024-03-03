@@ -209,25 +209,19 @@ def main():
     label_encoders = joblib.load('label_encoders.pkl')
 
     # Read the entire file for prediction
-    prediction_data = safe_load_data("Indirect_Trade_2016.cma", 0, float('inf'))  # This may be too large, adjust accordingly
+    prediction_data = safe_load_data("Indirect_Trade_2016.cma", 0, float('inf'))
 
-    # Save the 'Volume' column for comparison (if you have actual values)
-    # Otherwise, if you only want to predict, you can skip saving this column
     if 'Volume' in prediction_data:
         actual_values = pd.to_numeric(prediction_data['Volume'], errors='coerce')
 
-
-    # Preprocess the data for prediction
     prediction_features = prepare_data_for_prediction(prediction_data, label_encoders)
 
     # Make predictions for all entries
     predictions = trained_model.predict(prediction_features)
  
-
     # If you want to store the predictions alongside the features
     prediction_data['Predicted_Volume'] = predictions
     
-    # Save the results to a new file, if needed
     #prediction_data.to_csv('predicted_volumes.csv', index=False)
     plot_residuals(actual_values, prediction_data)
 

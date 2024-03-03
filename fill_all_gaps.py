@@ -54,12 +54,16 @@ def prepare_test_data(file_path, start, stop):
 def create_model():
     model = tf.keras.Sequential([
         tf.keras.layers.Input(shape=(6,)),
-        tf.keras.layers.Dense(128, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
+        tf.keras.layers.Dense(256, activation='relu'),
+        tf.keras.layers.BatchNormalization(),  # Batch normalization layer
         tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.BatchNormalization(),  # Batch normalization layer
+        tf.keras.layers.Dropout(0.5),
+        tf.keras.layers.Dense(64, activation='relu'),
         tf.keras.layers.Dense(1)
     ])
-    model.compile(loss='mean_squared_error', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
+    model.compile(loss='mean_absolute_error', optimizer=tf.keras.optimizers.Adam(learning_rate=0.01))
     return model
 
 
@@ -80,16 +84,18 @@ def prepare_data(data_frame):
 
 
 def train_model_in_batches(model, start=0, batch_size=100000, callbacks=None):
-    # Train the model in batches
+
     end = start + batch_size
     while True:
         data_frame = get_small_data(start, end)
         if data_frame.empty:
             break
         fill_features, fill_labels = prepare_data(data_frame)
-        model.fit(fill_features, fill_labels, epochs=10, batch_size=32, callbacks=callbacks)
+        model.fit(fill_features, fill_labels, epochs=10, batch_size=64, callbacks=callbacks)
         start += batch_size
         end += batch_size
+
+
 
 def main():
     fill_model = create_model()
@@ -108,6 +114,8 @@ def main():
     fill_model.save_weights(checkpoint_path.format(epoch=0))
 
     fill_model.summary()
+
+    predictions = fill_model.predict()
 
 def load_model_from_checkpoint(model, checkpoint_path):
 
@@ -129,10 +137,14 @@ def test():
 
     fill_model = load_model_from_checkpoint(fill_model, checkpoint_path)
 
-    test_features, test_labels = prepare_test_data(file_path, start=100001, stop=200000)  # Adjust the range as needed
+    test_features, test_labels = prepare_test_data(file_path, start=100001, stop=200000)
 
+    predictions = fill_model.predict(test_features)
+
+    predictions_df = pd.DataFrame(predictions)
+    predictions_df.to_csv('predictions.csv', index = False)
     evaluate_model(fill_model, (test_features, test_labels))
 
 if __name__ == "__main__":
-    main()
+    #main()
     test()
